@@ -52,28 +52,9 @@ POST /dummyLogin
 
 ## 🚀 Запуск проекта
 
-### 1. Установите зависимости
+Для запуска требуется **Docker** и **Docker Compose**.
 
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-
-### 2. Настройте переменные окружения
-
-Создайте файл `.env` в корне проекта:
-
-```env
-PG_HOST=localhost
-PG_PORT=5432
-PG_USER=your_user
-PG_PASSWORD=your_password
-PG_DATABASE_NAME=pvz_db
-
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=your_redis_password
-REDIS_DB=0
-
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRATION=24h
-
-SERVER_PORT=:8080
+```bash
+git clone https://github.com/ne4chelovek/pvz-service
+cd pvz-service
+docker-compose up --build
