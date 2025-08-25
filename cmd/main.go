@@ -13,14 +13,20 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
 	ctx := context.Background()
 
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file:", err)
+	if _, err := os.Stat(".env"); err == nil {
+		if err := godotenv.Load(); err != nil {
+			log.Fatal("Error loading .env file:", err)
+		}
+	} else {
+		log.Println("No .env file found, using environment variables")
 	}
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)

@@ -12,4 +12,4 @@ scrape_configs:
 
   - job_name: "PVZ"
     static_configs:
-      - targets: [ "host.docker.internal:9000" ]
+      - targets: [ "pvz-service:9000" ]

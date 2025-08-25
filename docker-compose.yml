@@ -4,8 +4,35 @@ volumes:
   prometheus_data:
   grafana_data:
 
+networks:
+  pvz-network:
+    driver: bridge
+
 services:
-  PVZ:
+  pvz-service:
+    build: .
+    container_name: pvz-service
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    environment:
+      - PG_HOST=pvz-db
+      - PG_PORT=5432
+      - PG_USER=${PG_USER}
+      - PG_PASSWORD=${PG_PASSWORD}
+      - PG_DATABASE_NAME=${PG_DATABASE_NAME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SERVER_PORT=:8080
+    depends_on:
+      pvz-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - pvz-network
+
+  pvz-db:
     image: postgres:14-alpine3.19
     environment:
       POSTGRES_DB: ${PG_DATABASE_NAME}
@@ -15,13 +42,22 @@ services:
       - "${PG_PORT}:5432"
     volumes:
       - postgres_volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U pvz_user -d pvz_dev -h localhost -p 5432 || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - pvz-network
 
   migrator:
     build:
       context: .
       dockerfile: migration.Dockerfile
     depends_on:
-      - PVZ
+      pvz-db:
+        condition: service_healthy
     environment:
       - PG_HOST=${PG_HOST}
       - PG_PORT=${PG_PORT}
@@ -30,6 +66,8 @@ services:
       - PG_DATABASE_NAME=${PG_DATABASE_NAME}
     volumes:
       - ./migrations:/root/migrations
+    networks:
+      - pvz-network
 
   redis:
     image: redis:7.0-alpine
@@ -38,17 +76,19 @@ services:
       - "${REDIS_PORT}:6379"
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+    networks:
+      - pvz-network
 
   prometheus:
     image: prom/prometheus:v2.45.6
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     ports:
       - "9090:9090"
     volumes:
       - ./metrics/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./metrics/alerts.yml:/etc/prometheus/alerts.yml
       - prometheus_data:/prometheus
+    networks:
+      - pvz-network
 
   grafana:
     image: grafana/grafana-oss:10.0.3
@@ -56,3 +96,5 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+    networks:
+      - pvz-network

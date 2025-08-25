@@ -2,14 +2,14 @@ server:
   port: ":8080"
 
 database:
-  host: "localhost"
+  host: "pvz-db"
   port: "5432"
   user: "pvz_user"
   password: "pvz_pass"
   name: "pvz_dev"
 
 redis:
-  host: localhost
+  host: redis
   port: "6379"
   password: ""
   db: 0
