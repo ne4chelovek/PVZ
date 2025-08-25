@@ -55,6 +55,6 @@ POST /dummyLogin
 Для запуска требуется **Docker** и **Docker Compose**.
 
 ```bash
-git clone https://github.com/ne4chelovek/pvz-service
+git clone https://github.com/ne4chelovek/PVZ
 cd pvz-service
 docker-compose up --build
