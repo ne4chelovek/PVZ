@@ -11,9 +11,7 @@ import (
 )
 
 func LoadConfig() (*Config, error) {
-	env := getEnv()
-
-	viper.SetConfigName(env)
+	viper.SetConfigName("local")
 	viper.SetConfigType("yml")
 
 	absPath, err := filepath.Abs("configs")
@@ -21,8 +19,6 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("failed to get absolute path for configs: %w", err)
 	}
 	viper.AddConfigPath(absPath)
-
-	viper.AutomaticEnv()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AllowEmptyEnv(true)
@@ -44,14 +40,6 @@ func LoadConfig() (*Config, error) {
 		cfg.JWT.Expiration = duration
 	}
 
-	log.Printf("Loaded config for environment: %s", env)
+	log.Println("Loaded config")
 	return &cfg, nil
-}
-
-func getEnv() string {
-	env := viper.GetString("ENV")
-	if env == "" {
-		env = "local"
-	}
-	return env
 }
