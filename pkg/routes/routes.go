@@ -8,9 +8,12 @@ import (
 )
 
 func SetupRoutes(handler *handler.PVZHandler, tokenUtils utils.TokenUtils) (*gin.Engine, error) {
+	gin.SetMode(gin.ReleaseMode)
+
 	r := gin.New()
 
-	r.Use(middleware.LoggingMiddleware(),
+	r.Use(
+		middleware.LoggingMiddleware(),
 		middleware.PrometheusMiddleware(),
 		gin.Recovery(),
 	)
