@@ -19,7 +19,7 @@ func (h *PVZHandler) AddProduct(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 6*time.Second)
 	defer cancel()
 
 	product, err := h.receptionService.AddProduct(ctx, req.PVZID, req.Type)
