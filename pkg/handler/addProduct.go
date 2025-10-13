@@ -2,8 +2,11 @@ package handler
 
 import (
 	"PVZ/internal/metrics"
+	"context"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 func (h *PVZHandler) AddProduct(c *gin.Context) {
@@ -16,9 +19,16 @@ func (h *PVZHandler) AddProduct(c *gin.Context) {
 		return
 	}
 
-	product, err := h.receptionService.AddProduct(c.Request.Context(), req.PVZID, req.Type)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	product, err := h.receptionService.AddProduct(ctx, req.PVZID, req.Type)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if errors.Is(err, context.DeadlineExceeded) {
+			c.JSON(http.StatusRequestTimeout, gin.H{"error": "Request timeout"})
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
 		return
 	}
 
