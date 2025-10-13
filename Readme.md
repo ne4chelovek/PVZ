@@ -87,3 +87,6 @@ docker-compose up --build -d
 - Метрики: http://localhost:9000/metrics
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000 (логин: admin, пароль: admin)
+
+Ссылка на задание: 
+- https://github.com/avito-tech/tech-internship/blob/main/Tech%20Internships/Backend/Backend-trainee-assignment-spring-2025/Backend-trainee-assignment-spring-2025.md
