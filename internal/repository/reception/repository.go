@@ -2,6 +2,7 @@ package repository
 
 import (
 	"PVZ/internal/model"
+	"PVZ/internal/repository"
 	"context"
 	"errors"
 	"fmt"
@@ -12,11 +13,15 @@ import (
 )
 
 type receptionRepository struct {
-	db *pgxpool.Pool
+	db repository.QueryRunner
 }
 
-func NewReceiptRepository(db *pgxpool.Pool) *receptionRepository {
+func NewReceiptRepository(db *pgxpool.Pool) repository.ReceptionRepository {
 	return &receptionRepository{db: db}
+}
+
+func (r *receptionRepository) WithTx(tx pgx.Tx) repository.ReceptionRepository {
+	return &receptionRepository{db: tx}
 }
 
 func (r *receptionRepository) Create(ctx context.Context, reception *model.Reception) (*model.Reception, error) {

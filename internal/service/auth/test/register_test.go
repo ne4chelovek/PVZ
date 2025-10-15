@@ -3,14 +3,13 @@ package test
 import (
 	"PVZ/internal/model"
 	"PVZ/internal/service/auth"
+	utilsMocks "PVZ/internal/utils/mocks"
 	"context"
 	"golang.org/x/crypto/bcrypt"
 	"strings"
 	"testing"
 
 	repoMocks "PVZ/internal/repository/mocks"
-	utilsMocks "PVZ/internal/utils/mocks"
-
 	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/assert"
 )

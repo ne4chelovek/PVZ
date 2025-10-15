@@ -7,6 +7,7 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
+	Kafka    KafkaConfig    `mapstructure:"kafka"`
 }
 
 type ServerConfig struct {
@@ -31,4 +32,9 @@ type RedisConfig struct {
 type JWTConfig struct {
 	SecretKey  string        `mapstructure:"secret_key"`
 	Expiration time.Duration `mapstructure:"expiration"`
+}
+
+type KafkaConfig struct {
+	Brokers []string `mapstructure:"brokers"`
+	Topic   string   `mapstructure:"topic"`
 }

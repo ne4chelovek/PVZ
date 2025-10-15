@@ -2,9 +2,8 @@ package test
 
 import (
 	"PVZ/internal/service/auth"
-	"testing"
-
 	utilsMocks "PVZ/internal/utils/mocks"
+	"testing"
 
 	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/assert"

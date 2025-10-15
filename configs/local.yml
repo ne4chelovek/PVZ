@@ -17,3 +17,8 @@ redis:
 jwt:
   secret_key: "super-secret-key-for-local"
   expiration: "24h"
+
+kafka:
+  brokers:
+    - "kafka:9092"
+  topic: "pvz-events"

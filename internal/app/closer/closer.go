@@ -43,6 +43,10 @@ func WaitForShutdown(ctx context.Context, errChan <-chan error, s *server.Server
 		logger.Error("Prometheus shutdown error:", zap.Error(err))
 	}
 
+	if s.KafkaProducer != nil {
+		s.KafkaProducer.Close()
+	}
+
 	logger.Info("Closing database connections...")
 	s.DB.Close()
 }

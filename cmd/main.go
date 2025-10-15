@@ -27,9 +27,13 @@ func main() {
 		logger.Fatal("Failed to setup servers: %v", zap.Error(err))
 	}
 
+	processorCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	metrics.Register()
 
 	errChan := make(chan error, 1)
+	go servers.OutboxProcessor.Start(processorCtx)
 	go runHTTPServer(servers.HTTP, errChan)
 	go runPrometheusServer(servers.Prometheus, errChan)
 	closer.WaitForShutdown(ctx, errChan, servers)

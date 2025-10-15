@@ -6,15 +6,20 @@ import (
 	"context"
 	"fmt"
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type pvzRepository struct {
-	db *pgxpool.Pool
+	db repository.QueryRunner
 }
 
 func NewPVZRepository(db *pgxpool.Pool) repository.PVZRepository {
 	return &pvzRepository{db: db}
+}
+
+func (r *pvzRepository) WithTx(tx pgx.Tx) repository.PVZRepository {
+	return &pvzRepository{db: tx}
 }
 
 func (r *pvzRepository) Create(ctx context.Context, pvz *model.PVZ) error {

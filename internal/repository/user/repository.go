@@ -2,20 +2,28 @@ package repository
 
 import (
 	"PVZ/internal/model"
+	"PVZ/internal/repository"
 	"context"
 	"fmt"
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type userRepository struct {
-	db *pgxpool.Pool
+	db repository.QueryRunner
 	sq squirrel.StatementBuilderType
 }
 
-func NewUserRepository(db *pgxpool.Pool) *userRepository {
+func NewUserRepository(db *pgxpool.Pool) repository.UserRepository {
 	return &userRepository{
 		db: db,
+	}
+}
+
+func (r *userRepository) WithTx(tx pgx.Tx) repository.UserRepository {
+	return &userRepository{
+		db: tx,
 	}
 }
 

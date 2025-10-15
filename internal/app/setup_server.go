@@ -3,7 +3,12 @@ package app
 import (
 	"PVZ/internal/cache/blackList"
 	"PVZ/internal/config"
+	"PVZ/internal/handler"
+	"PVZ/internal/handler/routes"
+	"PVZ/internal/kafka"
+	"PVZ/internal/kafka/outbox"
 	"PVZ/internal/logger"
+	eventRepo "PVZ/internal/repository/event"
 	pvzRepo "PVZ/internal/repository/pvz"
 	receptionRepo "PVZ/internal/repository/reception"
 	userRepo "PVZ/internal/repository/user"
@@ -12,8 +17,6 @@ import (
 	pvzService "PVZ/internal/service/pvz"
 	receptionService "PVZ/internal/service/reception"
 	"PVZ/internal/utils"
-	"PVZ/pkg/handler"
-	"PVZ/pkg/routes"
 	"context"
 	"flag"
 	"fmt"
@@ -32,10 +35,12 @@ import (
 var logLevel = flag.String("1", "info", "log level")
 
 type Servers struct {
-	HTTP       *http.Server
-	Redis      *redis.Client
-	Prometheus *http.Server
-	DB         *pgxpool.Pool
+	HTTP            *http.Server
+	Redis           *redis.Client
+	Prometheus      *http.Server
+	DB              *pgxpool.Pool
+	KafkaProducer   *kafka.KafkaProducer
+	OutboxProcessor *outbox.OutboxProcessor
 }
 
 func SetupServers(ctx context.Context, cfg *config.Config) (*Servers, error) {
@@ -61,6 +66,20 @@ func SetupServers(ctx context.Context, cfg *config.Config) (*Servers, error) {
 		return nil, err
 	}
 
+	kafkaProducer, err := kafka.NewKafkaProducer(
+		cfg.Kafka.Brokers,
+		cfg.Kafka.Topic,
+	)
+	if err != nil {
+		logger.Fatal("Failed to create Kafka producer", zap.Error(err))
+	}
+
+	outboxProcessor := outbox.NewOutboxProcessor(
+		eventRepo.NewEventRepository(pool),
+		kafkaProducer,
+		pool,
+	)
+
 	tokenUtils := createTokenUtils(redisConn, cfg.JWT.SecretKey, cfg.JWT.Expiration)
 	authSrv := createAuthService(redisConn, tokenUtils, pool)
 	pvzSrv := createPVZService(pool)
@@ -84,9 +103,11 @@ func SetupServers(ctx context.Context, cfg *config.Config) (*Servers, error) {
 			Addr:    cfg.Server.Port,
 			Handler: ginEngine,
 		},
-		Prometheus: prometheusServer,
-		Redis:      redisConn,
-		DB:         pool,
+		Prometheus:      prometheusServer,
+		Redis:           redisConn,
+		DB:              pool,
+		KafkaProducer:   kafkaProducer,
+		OutboxProcessor: outboxProcessor,
 	}, nil
 }
 
@@ -167,7 +188,7 @@ func createAuthService(redisConn *redis.Client, tokenUtils utils.TokenUtils, poo
 	)
 }
 func createPVZService(pool *pgxpool.Pool) service.PVZService {
-	return pvzService.NewPVZService(pvzRepo.NewPVZRepository(pool), receptionRepo.NewReceiptRepository(pool))
+	return pvzService.NewPVZService(pvzRepo.NewPVZRepository(pool), receptionRepo.NewReceiptRepository(pool), pool, eventRepo.NewEventRepository(pool))
 }
 
 func createReceiptService(pool *pgxpool.Pool) service.ReceptionService {

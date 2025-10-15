@@ -7,21 +7,21 @@ import (
 )
 
 func (s *PVZService) GetAllPVZWithReceptions(ctx context.Context, startDate, endDate *string, page, limit int) ([]*model.PVZWithReceptions, error) {
-	pvzs, err := s.Repo.GetAll(ctx)
+	pvzs, err := s.pvzRepo.GetAll(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get PVZ: %w", err)
 	}
 
 	var result []*model.PVZWithReceptions
 	for _, p := range pvzs {
-		receptions, err := s.RecRepo.GetReceptionsByPVZ(ctx, p.ID, startDate, endDate)
+		receptions, err := s.recRepo.GetReceptionsByPVZ(ctx, p.ID, startDate, endDate)
 		if err != nil {
 			continue
 		}
 
 		var recWithProducts []*model.ReceptionWithProducts
 		for _, r := range receptions {
-			products, _ := s.RecRepo.GetProductsByReception(ctx, r.ID)
+			products, _ := s.recRepo.GetProductsByReception(ctx, r.ID)
 			recWithProducts = append(recWithProducts, &model.ReceptionWithProducts{
 				Reception: r,
 				Products:  products,

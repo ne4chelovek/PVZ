@@ -1,9 +1,9 @@
 package routes
 
 import (
+	"PVZ/internal/handler"
 	"PVZ/internal/middleware"
 	"PVZ/internal/utils"
-	"PVZ/pkg/handler"
 	"github.com/gin-gonic/gin"
 )
 
