@@ -18,9 +18,9 @@ type KafkaProducer struct {
 
 func NewKafkaProducer(brokers []string, topic string) (*KafkaProducer, error) {
 	config := sarama.NewConfig()
-	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.Producer.Retry.Max = 3
-	config.Producer.Return.Successes = true
+	config.Producer.RequiredAcks = sarama.WaitForAll // Ждем подтверждения от ВСЕХ реплик
+	config.Producer.Retry.Max = 3                    // 3 попытки переотправки при ошибке
+	config.Producer.Return.Successes = true          // Возвращаем инфо об успешной отправке
 
 	producer, err := sarama.NewSyncProducer(brokers, config)
 	if err != nil {
