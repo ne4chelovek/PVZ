@@ -3,7 +3,6 @@ package outbox
 import (
 	"PVZ/internal/model"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"log"
@@ -33,7 +32,6 @@ func (p *OutboxProcessor) processBatch(ctx context.Context) error {
 	}
 	defer tx.Rollback(ctx)
 
-	// Получаем непрочитанные события
 	events, err := p.getUnprocessedEvents(ctx, tx)
 	if err != nil {
 		return err
@@ -41,7 +39,6 @@ func (p *OutboxProcessor) processBatch(ctx context.Context) error {
 
 	for _, event := range events {
 		if err := p.processEvent(ctx, tx, event); err != nil {
-			// Логируем ошибку, но продолжаем обработку остальных событий
 			log.Printf("Failed to process event %s: %v", event.ID, err)
 			continue
 		}
@@ -55,12 +52,7 @@ func (p *OutboxProcessor) getUnprocessedEvents(ctx context.Context, tx pgx.Tx) (
 }
 
 func (p *OutboxProcessor) processEvent(ctx context.Context, tx pgx.Tx, event *model.Event) error {
-	payloadBytes, err := json.Marshal(event.Payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal payload: %w", err)
-	}
-
-	if err := p.kafkaProd.PublishEvent(ctx, event.EventType, event.AggregateId, payloadBytes); err != nil {
+	if err := p.kafkaProd.PublishEvent(ctx, event.EventType, event.AggregateId, event.Payload); err != nil {
 		return fmt.Errorf("failed to publish to kafka: %w", err)
 	}
 	return p.eventRepo.MarkAsProcessed(ctx, tx, event.ID)

@@ -33,12 +33,12 @@ func NewKafkaProducer(brokers []string, topic string) (*KafkaProducer, error) {
 	}, nil
 }
 
-func (k *KafkaProducer) PublishEvent(ctx context.Context, eventType string, aggregateID string, payload []byte) error {
+func (k *KafkaProducer) PublishEvent(ctx context.Context, eventType string, aggregateID string, payload string) error {
 	event := model.Event{
 		ID:          uuid.New().String(),
 		EventType:   eventType,
 		AggregateId: aggregateID,
-		Payload:     string(payload),
+		Payload:     payload,
 		CreatedAt:   time.Now(),
 	}
 
