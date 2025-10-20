@@ -26,13 +26,22 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - SERVER_PORT=:8080
+      - KAFKA_BROKER=kafka:9092
     depends_on:
       pvz-db:
         condition: service_healthy
       redis:
         condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - pvz-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   pvz-db:
     image: postgres:14-alpine3.19
@@ -80,6 +89,11 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     networks:
       - pvz-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   prometheus:
     image: prom/prometheus:v2.45.6
@@ -112,6 +126,11 @@ services:
       - zookeeper_data:/data
     networks:
       - pvz-network
+    healthcheck:
+      test: [ "CMD", "echo", "ruok", "|", "nc", "localhost", "2181" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: wurstmeister/kafka:2.13-2.8.1
@@ -123,19 +142,21 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CREATE_TOPICS: "pvz-events:1:1"
+      KAFKA_HEAP_OPTS: "-Xmx256m -Xms128m"
     volumes:
       - kafka_data:/kafka
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     networks:
       - pvz-network
     healthcheck:
       test: [ "CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092" ]
       interval: 10s
       timeout: 10s
-      retries: 10
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -145,7 +166,9 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - pvz-network
